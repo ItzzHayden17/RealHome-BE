@@ -4,17 +4,22 @@ import mongoose, { Schema } from "mongoose"
 import cors from "cors"
 import multer from "multer"
 import path from 'path';
-import fs from 'fs'
+import fs from 'fs';
+import bcrypt from "bcrypt";
+import dotenv from "dotenv"
+import { log } from "console"
 
 const app = express()
 const port = 8080           //This will change when we host it online
+dotenv.config();
 const frontEndUrl = "http://localhost:3000"
+const saltRounds = 10
 
 app.use(bodyParser.urlencoded({ extended: true }))  //Allow express to use body-parser to parse incoming form data.
 app.use("/image",express.static('uploads'));
 app.use(cors())
 
-mongoose.connect("mongodb+srv://admin:admin@real-home.i5pmd.mongodb.net/?retryWrites=true&w=majority&appName=real-home") //Connect to the MongoDB
+mongoose.connect(process.env.MONGO_URL) //Connect to the MongoDB
 
 
 const listingSchema = new mongoose.Schema({
@@ -53,6 +58,24 @@ const listingSchema = new mongoose.Schema({
 
 const Listing = mongoose.model("Listing",listingSchema)
 
+const userSchema = new mongoose.Schema({
+  id: {
+    type: String,
+    required: true,
+    unique: true,
+    default: () => new mongoose.Types.ObjectId().toString()
+},
+  email:String,
+  password:String,
+  name:String,
+  surname:String,
+  number:Number,
+  isAgent:Boolean,
+  image:String,
+})
+
+const User = mongoose.model("User",userSchema)
+
 
 const uploadDir = 'uploads';
 if (!fs.existsSync(uploadDir)) {
@@ -75,6 +98,10 @@ app
     res.set('Access-Control-Allow-Origin', 'http://localhost:3000')
     const data = await Listing.find()
     res.send(data)
+})
+.get("/all-agents",async (req,res)=>{
+  const agents = await User.find({isAgent:true})  
+  res.send(agents)
 })
 .post("/list-property",upload.array('property-images'),(req,res)=>{
 
@@ -121,6 +148,52 @@ app
   )
   listing.save()
   res.redirect(frontEndUrl)
+})
+.post("/signup",(req,res)=>{
+  const {email,password,confirmPassword,name,surname,number} = req.body
+  if (password == confirmPassword) {
+    bcrypt.hash(password, saltRounds,async function(err, hash) {
+      const user = new User({
+        email:email,
+        password:hash,
+        name:name,
+        surname:surname,
+        number:number,
+        isAgent:false,
+        image:""
+      })
+
+      await user.save()
+      res.cookie("user",JSON.stringify(user),{maxAge:1000*60*15})
+      res.redirect(frontEndUrl)
+  });
+  }else{
+    res.send("passwords do not match")
+  }
+
+})
+.post("/login", async (req,res)=>{
+  const {email,password} = req.body
+  try {
+    const user = await User.findOne({ email: email });
+    bcrypt.compare(password, user.password, function(err, result) {
+      if (err) {
+        console.log(err);
+        res.send(err)
+      }else{
+        if (result) {
+          res.cookie("user",JSON.stringify(user),{maxAge:1000*60*15 })
+          res.redirect(frontEndUrl)
+        }else{
+          res.send("Password incorrect")
+        }
+      }
+  });
+  } catch (error) {
+    console.error(error);
+    res.send("User not found,try signin up.")
+  }
+  
 })
 .listen(port,()=>{
     console.log(`Server started on port ${port}`);
