@@ -4,11 +4,11 @@ import mongoose, { Schema } from "mongoose"
 import cors from "cors"
 import multer from "multer"
 import path from 'path';
-import fs from 'fs';
-import { log } from "console"
+import fs from 'fs'
 
 const app = express()
 const port = 8080           //This will change when we host it online
+const frontEndUrl = "http://localhost:3000"
 
 app.use(bodyParser.urlencoded({ extended: true }))  //Allow express to use body-parser to parse incoming form data.
 app.use("/image",express.static('uploads'));
@@ -74,8 +74,6 @@ app
 .get("/properties",async (req,res)=>{
     res.set('Access-Control-Allow-Origin', 'http://localhost:3000')
     const data = await Listing.find()
-    console.log(data);
-
     res.send(data)
 })
 .post("/list-property",upload.array('property-images'),(req,res)=>{
@@ -91,7 +89,6 @@ app
     imageArray.push(file.filename)
   })
 
-  console.log(imageArray);
 
   const listing = new Listing(
     {
@@ -123,6 +120,7 @@ app
     }
   )
   listing.save()
+  res.redirect(frontEndUrl)
 })
 .listen(port,()=>{
     console.log(`Server started on port ${port}`);
