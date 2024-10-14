@@ -7,7 +7,6 @@ import path from 'path';
 import fs from 'fs';
 import bcrypt from "bcrypt";
 import dotenv from "dotenv"
-import { log } from "console"
 
 const app = express()
 const port = 8080           //This will change when we host it online
@@ -53,7 +52,8 @@ const listingSchema = new mongoose.Schema({
   agentName:String,
   agentEmail:String,
   agentMobile:String,
-  additionalFeatures:String
+  additionalFeatures:String,
+  userWhoListedID:String
 })
 
 const Listing = mongoose.model("Listing",listingSchema)
@@ -105,9 +105,10 @@ app
 })
 .post("/list-property",upload.array('property-images'),(req,res)=>{
 
-  const {listingType,propertyType,erfSize,address,suburb,city,province,sellerName,sellerEmail,sellerMobile,agentName,agentEmail,agentMobile,listPrice,rates,levies,listingHeading,listingDescription,petsAllowed,bedrooms,bathrooms,additionalFeatures,carports} = req.body
+  const {listingType,propertyType,erfSize,address,suburb,city,province,sellerName,sellerEmail,sellerMobile,agentName,agentEmail,agentMobile,listPrice,rates,levies,listingHeading,listingDescription,petsAllowed,bedrooms,bathrooms,additionalFeatures,carports,userId} = req.body
   const imageArray =[]
-
+  console.log(userId);
+  
   var pets = false
   if (petsAllowed == "yes") {
     pets = true
@@ -143,14 +144,24 @@ app
       agentName:agentName,
       agentEmail:agentEmail,
       agentMobile:agentMobile,
-      additionalFeatures:additionalFeatures
+      additionalFeatures:additionalFeatures,
+      userWhoListedID:userId
     }
   )
   listing.save()
+  console.log(listing);
+  
   res.redirect(frontEndUrl)
 })
-.post("/signup",(req,res)=>{
+.post("/signup",upload.single('agentImage'),(req,res)=>{
   const {email,password,confirmPassword,name,surname,number} = req.body
+  var agentImage = ""
+  var isAgent = true
+  if (req.file) {
+    agentImage = req.file.filename
+    isAgent = true
+  }
+  
   if (password == confirmPassword) {
     bcrypt.hash(password, saltRounds,async function(err, hash) {
       const user = new User({
@@ -159,11 +170,12 @@ app
         name:name,
         surname:surname,
         number:number,
-        isAgent:false,
-        image:""
+        isAgent:isAgent,
+        image:agentImage
       })
 
       await user.save()
+      
       res.cookie("user",JSON.stringify(user),{maxAge:1000*60*15})
       res.redirect(frontEndUrl)
   });
