@@ -7,6 +7,7 @@ import path from 'path';
 import fs from 'fs';
 import bcrypt from "bcrypt";
 import dotenv from "dotenv"
+import { log } from "console"
 
 const app = express()
 const port = 8080           //This will change when we host it online
@@ -102,6 +103,19 @@ app
 .get("/all-agents",async (req,res)=>{
   const agents = await User.find({isAgent:true})  
   res.send(agents)
+})
+.get("/listing/:id",async (req,res)=>{
+
+  try {
+    const listing = await Listing.findOne({_id : req.params.id })
+    res.send(listing)
+    console.log(listing);
+    
+  } catch (error) {
+    console.log(error);
+    
+  }
+
 })
 .post("/list-property",upload.array('property-images'),(req,res)=>{
 
