@@ -43,7 +43,7 @@ const listingSchema = new mongoose.Schema({
   levies:Number,
   rates:Number,
   images:Array,
-  agentId:Number,
+  agentId:String,
   address:String,
   city:String,
   province:String,
@@ -108,14 +108,20 @@ app
 
   try {
     const listing = await Listing.findOne({_id : req.params.id })
-    res.send(listing)
-    console.log(listing);
+    const agent = await User.findOne({_id : listing.agentId})
+    res.send([listing,agent])
+    console.log(agent);
     
   } catch (error) {
     console.log(error);
     
   }
 
+})
+.get("/agent/:id",async (req,res)=>{
+  const agent = await User.findOne({id:req.params.id})  
+  res.send(agent)
+  
 })
 .post("/list-property",upload.array('property-images'),(req,res)=>{
 
