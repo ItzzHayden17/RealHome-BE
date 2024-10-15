@@ -7,7 +7,7 @@ import path from "path";
 import fs from "fs";
 import bcrypt from "bcrypt";
 import dotenv from "dotenv";
-import { log } from "console";
+import sgMail from '@sendgrid/mail';
 
 const app = express();
 const port = 8080; //This will change when we host it online
@@ -58,6 +58,52 @@ const listingSchema = new mongoose.Schema({
 
 const Listing = mongoose.model("Listing", listingSchema);
 
+const wishlistSchema = new mongoose.Schema({
+  price:{
+    type:Number,
+    required:false
+  },
+  bed:{
+    type:Number,
+    required:false
+  },
+  bath:{
+    type:Number,
+    required:false
+  },
+  car:{
+    type:Number,
+    required:false
+  },
+  type:{
+    type:String,
+    required:false
+  },
+  suburb:{
+    type:Number,
+    required:false
+  }, 
+  pet:{
+    type:Boolean,
+    required:false
+  },
+  city:{
+    type:String,
+    required:false
+  },
+  province:{
+    type:String,
+    required:false
+  },
+  email:String,
+  emailSentToUser:{
+    type:Boolean,
+    default:false
+  }
+});
+
+const Wishlist = mongoose.model('Wishlist', wishlistSchema);
+
 const userSchema = new mongoose.Schema({
   id: {
     type: String,
@@ -90,6 +136,70 @@ const storage = multer.diskStorage({
     cb(null, `${Date.now()}${path.extname(file.originalname)}`); // Use timestamp to avoid name collisions
   },
 });
+
+
+
+//Here is the wishlist checking funtion
+
+function checkForMatches(listing,wishlist){
+  return (!wishlist.price || listing.price <= wishlist.price) &&
+        (!wishlist.bed || listing.bed == wishlist.bed) &&
+        (!wishlist.bath || listing.bath == wishlist.bath) &&
+        (!wishlist.car || listing.car == wishlist.car) &&
+        (!wishlist.type || listing.type == wishlist.type) &&
+        (!wishlist.suburb || listing.suburb == wishlist.suburb) &&
+        (!wishlist.pet || listing.pet == wishlist.pet)&&
+        (!wishlist.city || listing.city == wishlist.city)&&
+        (!wishlist.province || listing.province == wishlist.province)
+}
+
+
+function sendEmail(userEmail,listing){
+  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
+  let msg = {
+    from: 'anraypython@gmail.com',
+    to: `${userEmail}`,
+    subject: 'New Listing Match Found!',
+    text: `We found a match for your wishlist: ${JSON.stringify(listing)}`
+};
+  
+  sgMail.send(msg)
+    .then(() => {
+      console.log('Email sent')
+    })
+    .catch((error) => {
+      console.error(error)
+    });
+}
+
+
+async function checkAndNotify() {
+  const wishlists = await Wishlist.find();
+  const listings = await Listing.find();
+
+  console.log("Check and notify triggered");
+
+  for (const wishlist of wishlists) {
+    for (const listing of listings) {
+
+      
+      const match = checkForMatches(listing, wishlist)
+      
+      if (!wishlist.emailSentToUser) {
+        if (match) {
+          await Wishlist.findByIdAndUpdate(wishlist._id.toString(), {
+            $set: {emailSentToUser : true}
+          });
+          await sendEmail(wishlist.email, listing); // Await here for proper flow
+        }
+      }
+    }
+  }
+}
+
+setInterval(checkAndNotify  ,6000)
+
 
 const upload = multer({ storage: storage });
 app
@@ -228,7 +338,7 @@ app
         } else {
           if (result) {
             res.cookie("user", JSON.stringify(user), {
-              maxAge: 1000 * 60 * 15,
+              maxAge: 1000 * 60 * 30,
             });
             res.redirect(frontEndUrl);
           } else {
@@ -240,6 +350,28 @@ app
       console.error(error);
       res.send("User not found,try signin up.");
     }
+  })
+
+  .post("/wishlist",(req,res)=>{
+    const {price,bed,bath,car,type,suburb,pet,city,province,email} = req.body
+    
+    const wishlist = new Wishlist({
+      price:price,
+      bed:bed,
+      bath:bath,
+      car:car,
+      type:type,
+      suburb:suburb,
+      pet:pet,
+      city:city,
+      province:province,
+      email:email
+    })
+
+    console.log(wishlist);
+    wishlist.save()
+    res.sendStatus(200)
+    
   })
   .listen(port, () => {
     console.log(`Server started on port ${port}`);
