@@ -80,7 +80,7 @@ const wishlistSchema = new mongoose.Schema({
     required:false
   },
   suburb:{
-    type:Number,
+    type:String,
     required:false
   }, 
   pet:{
@@ -178,8 +178,6 @@ async function checkAndNotify() {
   const wishlists = await Wishlist.find();
   const listings = await Listing.find();
 
-  console.log("Check and notify triggered");
-
   for (const wishlist of wishlists) {
     for (const listing of listings) {
 
@@ -223,8 +221,11 @@ app
     }
   })
   .get("/agent/:id", async (req, res) => {
-    const agent = await User.findOne({ id: req.params.id });
+    const agent = await User.findOne({ _id: req.params.id });
     res.send(agent);
+  })
+  .get("/wishlist",(req,res)=>{
+
   })
   .post("/list-property", upload.array("property-images"), (req, res) => {
     const {
@@ -354,6 +355,10 @@ app
 
   .post("/wishlist",(req,res)=>{
     const {price,bed,bath,car,type,suburb,pet,city,province,email} = req.body
+
+    function strinToBool(string){
+      return string === "true"
+    }
     
     const wishlist = new Wishlist({
       price:price,
@@ -362,15 +367,14 @@ app
       car:car,
       type:type,
       suburb:suburb,
-      pet:pet,
       city:city,
+      pet:strinToBool(pet),
       province:province,
       email:email
     })
 
-    console.log(wishlist);
-    wishlist.save()
-    res.sendStatus(200)
+      wishlist.save()
+    res.redirect(frontEndUrl)
     
   })
   .listen(port, () => {
