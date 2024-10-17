@@ -14,6 +14,7 @@ const port = 8080; //This will change when we host it online
 dotenv.config();
 const frontEndUrl = "http://localhost:3000";
 const saltRounds = 10;
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 app.use(bodyParser.urlencoded({ extended: true })); //Allow express to use body-parser to parse incoming form data.
 app.use("/image", express.static("uploads"));
@@ -155,8 +156,7 @@ function checkForMatches(listing,wishlist){
 
 
 function sendEmail(userEmail,listing){
-  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-
+  
   let msg = {
     from: 'anraypython@gmail.com',
     to: `${userEmail}`,
@@ -323,6 +323,23 @@ app
 
         res.cookie("user", JSON.stringify(user), { maxAge: 1000 * 60 * 15 });
         res.redirect(frontEndUrl);
+
+        
+        let msg = {
+          from: 'anraypython@gmail.com',
+          to: `${email}`,
+          subject: 'Thank you for registering!',
+          text: `This email is just to welcome and thank you for using RealHome.<br>We believe you will have a great time`
+        };
+        
+        sgMail.send(msg)
+          .then(() => {
+            console.log('Email sent')
+          })
+          .catch((error) => {
+            console.error(error)
+          });
+
       });
     } else {
       res.send("passwords do not match");
@@ -342,6 +359,21 @@ app
               maxAge: 1000 * 60 * 30,
             });
             res.redirect(frontEndUrl);
+
+            let msg = {
+              from: 'anraypython@gmail.com',
+              to: `${email}`,
+              subject: 'RealHome Login',
+              text: `Hi ${user.name},we have detected a new login to your account,if this was you,you can safely ignore this email`
+            };
+            
+            sgMail.send(msg)
+              .then(() => {
+                console.log('Email sent')
+              })
+              .catch((error) => {
+                console.error(error)
+              });
           } else {
             res.send("Password incorrect");
           }
