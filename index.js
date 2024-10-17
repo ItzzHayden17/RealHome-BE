@@ -45,6 +45,8 @@ const listingSchema = new mongoose.Schema({
   images: Array,
   agentId: String,
   address: String,
+  lat:String,
+  lng:String,
   city: String,
   province: String,
   sellerName: String,
@@ -233,6 +235,8 @@ app
       propertyType,
       erfSize,
       address,
+      lng,
+      lat,
       suburb,
       city,
       province,
@@ -281,6 +285,8 @@ app
       images: imageArray,
       agentId: userId,
       address: address,
+      lng:lng,
+      lat:lat,
       city: city,
       province: province,
       sellerName: sellerName,
@@ -293,15 +299,13 @@ app
       userWhoListedID: userId,
     });
     listing.save();
-    console.log(listing);
-
     res.redirect(frontEndUrl);
   })
   .post("/signup", upload.single("agentImage"), (req, res) => {
     const { email, password, confirmPassword, name, surname, number } =
       req.body;
     var agentImage = "";
-    var isAgent = true;
+    var isAgent = false;
     if (req.file) {
       agentImage = req.file.filename;
       isAgent = true;
@@ -318,7 +322,8 @@ app
           isAgent: isAgent,
           image: agentImage,
         });
-
+        
+        
         await user.save();
 
         res.cookie("user", JSON.stringify(user), { maxAge: 1000 * 60 * 15 });
