@@ -8,6 +8,8 @@ import fs from "fs";
 import bcrypt from "bcrypt";
 import dotenv from "dotenv";
 import sgMail from '@sendgrid/mail';
+import { type } from "os";
+import { log } from "console";
 
 const app = express();
 const port = 8080; //This will change when we host it online
@@ -45,6 +47,34 @@ const listingSchema = new mongoose.Schema({
   images: Array,
   agentId: String,
   address: String,
+  kitchen:{
+    type:String,
+    required:false,
+  },
+  livingRoom:{
+    type:String,
+    required:false,
+  },
+  study:{
+    type:String,
+    required:false,
+  },
+  carport:{
+    type:String,
+    required:false,
+  },
+  garden:{
+    type:String,
+    required:false,
+  },
+  pool:{
+    type:String,
+    required:false,
+  },
+  flatlet:{
+    type:String,
+    required:false,
+  },
   lat:String,
   lng:String,
   city: String,
@@ -57,6 +87,7 @@ const listingSchema = new mongoose.Schema({
   agentMobile: String,
   additionalFeatures: String,
   userWhoListedID: String,
+
 });
 
 const Listing = mongoose.model("Listing", listingSchema);
@@ -239,6 +270,7 @@ app
       lat,
       suburb,
       city,
+      garages,
       province,
       sellerName,
       sellerEmail,
@@ -255,8 +287,15 @@ app
       bedrooms,
       bathrooms,
       additionalFeatures,
-      carports,
       userId,
+      kitchen,
+      livingRoom,
+      study,
+      carport,
+      garden,
+      pool,
+      flatlet,
+
     } = req.body;
     const imageArray = [];
 
@@ -274,7 +313,7 @@ app
       listingDescription: listingDescription,
       bed: bedrooms,
       bath: bathrooms,
-      car: carports,
+      car: garages,
       pet: pets,
       sqrmeter: erfSize,
       type: propertyType,
@@ -288,6 +327,13 @@ app
       lng:lng,
       lat:lat,
       city: city,
+      kitchen:kitchen,
+      livingRoom:livingRoom,
+      study:study,
+      carport:carport,
+      garden:garden,
+      pool:pool,
+      flatlet:flatlet,
       province: province,
       sellerName: sellerName,
       sellerEmail: sellerEmail,
@@ -298,8 +344,10 @@ app
       additionalFeatures: additionalFeatures,
       userWhoListedID: userId,
     });
-    listing.save();
-    res.redirect(frontEndUrl);
+    // listing.save();
+    console.log(listing);
+
+    // res.redirect(frontEndUrl);
   })
   .post("/signup", upload.single("agentImage"), (req, res) => {
     const { email, password, confirmPassword, name, surname, number } =
