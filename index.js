@@ -248,7 +248,6 @@ app
       const listing = await Listing.findOne({ _id: req.params.id });
       const agent = await User.findOne({ _id: listing.agentId });
       res.send([listing, agent]);
-      console.log(agent);
     } catch (error) {
       console.log(error);
     }
@@ -344,10 +343,8 @@ app
       additionalFeatures: additionalFeatures,
       userWhoListedID: userId,
     });
-    // listing.save();
-    console.log(listing);
-
-    // res.redirect(frontEndUrl);
+    listing.save();
+    res.redirect(frontEndUrl);
   })
   .post("/signup", upload.single("agentImage"), (req, res) => {
     const { email, password, confirmPassword, name, surname, number } =
@@ -437,7 +434,6 @@ app
       res.send("User not found,try signin up.");
     }
   })
-
   .post("/wishlist",(req,res)=>{
     const {price,bed,bath,car,type,suburb,pet,city,province,email} = req.body
 
@@ -461,6 +457,106 @@ app
       wishlist.save()
     res.redirect(frontEndUrl)
     
+  })
+  .post("/edit-listing/:id",upload.array("property-images"),async (req,res)=>{
+
+
+    const {
+      images,
+      listingType,
+      propertyType,
+      sqrmeter,
+      address,
+      lng,
+      lat,
+      suburb,
+      city,
+      car,
+      province,
+      sellerName,
+      sellerEmail,
+      sellerMobile,
+      agentName,
+      agentEmail,
+      agentMobile,
+      price,
+      rates,
+      levies,
+      listingHeading,
+      listingDescription,
+      petsAllowed,
+      bed,
+      bath,
+      additionalFeatures,
+      userId,
+      kitchen,
+      livingRoom,
+      study,
+      carport,
+      garden,
+      pool,
+      flatlet,
+      listingId
+
+    } = req.body;
+
+    const imageArray = [];
+
+    var pets = false;
+    if (petsAllowed == "yes") {
+      pets = true;
+    }
+    req.files.forEach((file) => {
+      imageArray.push(file.filename);
+    });
+    const listingData = await Listing.findById(listingId)
+    const filterArray = listingData.images.filter(image => images.includes(image))
+    const updatedImagesArray = filterArray.concat(imageArray)
+    
+    const data = {
+      price: price,
+      listingHeading: listingHeading,
+      listingDescription: listingDescription,
+      bed: bed,
+      bath: bath,
+      car: car,
+      pet: pets,
+      sqrmeter: sqrmeter,
+      type: propertyType,
+      suburb: suburb,
+      sellType: listingType,
+      levies: levies,
+      rates: rates,
+      images: updatedImagesArray,
+      agentId: userId,
+      address: address,
+      lng:lng,
+      lat:lat,
+      city: city,
+      kitchen:kitchen,
+      livingRoom:livingRoom,
+      study:study,
+      carport:carport,
+      garden:garden,
+      pool:pool,
+      flatlet:flatlet,
+      province: province,
+      sellerName: sellerName,
+      sellerEmail: sellerEmail,
+      sellerMobile: sellerMobile,
+      agentName: agentName,
+      agentEmail: agentEmail,
+      agentMobile: agentMobile,
+      additionalFeatures: additionalFeatures,
+      userWhoListedID: userId,
+    }
+    const listing = await Listing.findByIdAndUpdate(listingId,data,{overwrite:true})
+    res.redirect(frontEndUrl+"/listing/"+listingId)
+  })
+  .delete("/delete/:id",async (req,res)=>{
+    const listing = await Listing.findByIdAndDelete(req.params.id)
+    
+    res.redirect(frontEndUrl)
   })
   .listen(port, () => {
     console.log(`Server started on port ${port}`);
