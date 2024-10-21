@@ -236,7 +236,7 @@ const upload = multer({ storage: storage });
 app
   .get("/properties", async (req, res) => {
     res.set("Access-Control-Allow-Origin", "http://localhost:3000");
-    const data = await Listing.find();
+    const data = await Listing.find();    
     res.send(data);
   })
   .get("/all-agents", async (req, res) => {
@@ -553,9 +553,36 @@ app
     const listing = await Listing.findByIdAndUpdate(listingId,data,{overwrite:true})
     res.redirect(frontEndUrl+"/listing/"+listingId)
   })
+  .post("/contact-agent/:id",async (req,res)=>{
+    const user = await User.findById(req.params.id)
+    const {name,email,message} = req.body
+
+    function sendEmail(userEmail,senderEmail,name,message){
+  
+      let msg = {
+        from: `anraypython@gmail.com`,
+        to: `${userEmail}`,
+        subject: 'Listing enquiry',
+        text: `${name} 
+               ${senderEmail}
+              ${message}`
+    };
+      
+      sgMail.send(msg)
+        .then(() => {
+          console.log('Email sent')
+        })
+        .catch((error) => {
+          console.error(error)
+        });
+    }
+
+    sendEmail(user.email,email,name,message)
+    res.redirect(frontEndUrl)
+
+  })
   .delete("/delete/:id",async (req,res)=>{
     const listing = await Listing.findByIdAndDelete(req.params.id)
-    
     res.redirect(frontEndUrl)
   })
   .listen(port, () => {
