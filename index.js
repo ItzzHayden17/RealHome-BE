@@ -8,8 +8,6 @@ import fs from "fs";
 import bcrypt from "bcrypt";
 import dotenv from "dotenv";
 import sgMail from '@sendgrid/mail';
-import { type } from "os";
-import { log } from "console";
 
 const app = express();
 const port = 8080; //This will change when we host it online
@@ -21,6 +19,22 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 app.use(bodyParser.urlencoded({ extended: true })); //Allow express to use body-parser to parse incoming form data.
 app.use("/image", express.static("uploads"));
 app.use(cors());
+
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://realhome-fe.onrender.com"
+];
+
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+      res.set("Access-Control-Allow-Origin", origin);
+  }
+
+  res.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  res.set("Access-Control-Allow-Headers", "Content-Type");
+  next();
+});
 
 mongoose.connect(process.env.MONGO_URL); //Connect to the MongoDB
 
@@ -235,7 +249,6 @@ setInterval(checkAndNotify  ,6000)
 const upload = multer({ storage: storage });
 app
   .get("/properties", async (req, res) => {
-    res.set("Access-Control-Allow-Origin", "http://localhost:3000");
     const data = await Listing.find();    
     res.send(data);
   })
@@ -254,6 +267,8 @@ app
   })
   .get("/agent/:id", async (req, res) => {
     const agent = await User.findOne({ _id: req.params.id });
+    console.log(req.params.id);
+    
     res.send(agent);
   })
   .get("/wishlist",(req,res)=>{
@@ -581,6 +596,27 @@ app
     res.redirect(frontEndUrl)
 
   })
+  .post("/edit-profile/:id",upload.single("agentImage"),async (req,res)=>{
+
+    const {name,surname,email,agentImage} = req.body
+
+    var image = ""
+    if (req.file) {
+      image = req.file.filename
+    } else {
+      image = agentImage
+    }
+    const data = {
+      email:email,
+      name:name,
+      surname:surname,
+      image:image
+    }
+    const user = await User.findByIdAndUpdate(req.params.id,data)
+    res.redirect(frontEndUrl+"/agents")
+  })
+
+
   .delete("/delete/:id",async (req,res)=>{
     const listing = await Listing.findByIdAndDelete(req.params.id)
     res.redirect(frontEndUrl)
