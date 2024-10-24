@@ -18,7 +18,9 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 app.use(bodyParser.urlencoded({ extended: true })); //Allow express to use body-parser to parse incoming form data.
 app.use("/image", express.static("uploads"));
-app.use(cors());
+app.use(
+  cors({ credentials: true, origin: true, exposedHeaders: ["set-cookie"] })
+  );
 
 const allowedOrigins = [
   "http://localhost:3000",
