@@ -424,7 +424,7 @@ app
               maxAge: 1000 * 60 * 30,
               secure:true,
               sameSite:"None",
-              domain:".onrender.com"
+              domain:"realhome-fe.onrender.com"
             });
             res.redirect(frontEndUrl);
 
