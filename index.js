@@ -18,9 +18,6 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 app.use(bodyParser.urlencoded({ extended: true })); //Allow express to use body-parser to parse incoming form data.
 app.use("/image", express.static("uploads"));
-app.use(
-  cors({ credentials: true, origin: true, exposedHeaders: ["set-cookie"] })
-  );
 
 const allowedOrigins = [
   "http://localhost:3000",
@@ -39,11 +36,10 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', 'https://realhome-fe.onrender.com'); // Your FE URL
-  res.header('Access-Control-Allow-Credentials', 'true'); // Important for sending cookies
-  next();
-});
+app.use(cors({
+  origin: 'https://realhome-fe.onrender.com',
+  credentials: true
+}));
 
 mongoose.connect(process.env.MONGO_URL); //Connect to the MongoDB
 
@@ -433,7 +429,6 @@ app
               maxAge: 1000 * 60 * 30,
               secure:true,
               httpOnly:false,
-              domain:".onrender.com",
               sameSite:"None"              
             });
             res.redirect(frontEndUrl);
