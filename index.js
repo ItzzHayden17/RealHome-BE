@@ -423,7 +423,8 @@ app
             res.cookie("user", JSON.stringify(user), {
               maxAge: 1000 * 60 * 30,
               secure:true,
-              sameSite:"None"
+              sameSite:"None",
+              domain:".onrender.com"
             });
             res.redirect(frontEndUrl);
 
