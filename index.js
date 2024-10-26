@@ -426,7 +426,6 @@ app
         } else {
           if (result) {
             res.send(user)
-            res.redirect(frontEndUrl)
 
             let msg = {
               from: 'anraypython@gmail.com',
