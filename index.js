@@ -12,7 +12,7 @@ import sgMail from '@sendgrid/mail';
 const app = express();
 const port = 8080; //This will change when we host it online
 dotenv.config();
-const frontEndUrl = "https://realhome-fe.onrender.com/";
+const frontEndUrl = "https://realhome-fe.onrender.com";
 const saltRounds = 10;
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
