@@ -12,7 +12,7 @@ import sgMail from '@sendgrid/mail';
 const app = express();
 const port = 8080; //This will change when we host it online
 dotenv.config();
-const frontEndUrl = "https://realhome-fe.onrender.com";
+const frontEndUrl = "https://realhome-fe.onrender.com/";
 const saltRounds = 10;
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
@@ -36,10 +36,7 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(cors({
-  origin: 'https://realhome-fe.onrender.com',
-  credentials: true
-}));
+app.use(cors());
 
 mongoose.connect(process.env.MONGO_URL); //Connect to the MongoDB
 
@@ -253,6 +250,9 @@ setInterval(checkAndNotify  ,6000)
 
 const upload = multer({ storage: storage });
 app
+.get("/",(req,res)=>{
+  res.send("Server active")
+})
   .get("/properties", async (req, res) => {
     const data = await Listing.find();    
     res.send(data);
@@ -390,9 +390,7 @@ app
         
         
         await user.save();
-
-        res.cookie("user", JSON.stringify(user), { maxAge: 1000 * 60 * 15 });
-        res.redirect(frontEndUrl);
+        res.redirect(frontEndUrl+"/login");
 
         
         let msg = {
@@ -415,8 +413,10 @@ app
       res.send("passwords do not match");
     }
   })
-  .post("/login", async (req, res) => {
+  .post("/login",upload.none(), async (req, res) => {
+    
     const { email, password } = req.body;
+    
     try {
       const user = await User.findOne({ email: email });
       bcrypt.compare(password, user.password, function (err, result) {
@@ -425,13 +425,7 @@ app
           res.send(err);
         } else {
           if (result) {
-            res.cookie("user", JSON.stringify(user), {
-              maxAge: 1000 * 60 * 30,
-              secure:true,
-              httpOnly:false,
-              sameSite:"None"              
-            });
-            res.redirect(frontEndUrl);
+            res.send(user)
 
             let msg = {
               from: 'anraypython@gmail.com',
