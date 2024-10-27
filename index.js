@@ -261,6 +261,8 @@ const upload = multer({ storage: storage });
 app
 .get("/",(req,res)=>{
   res.send("Server active")
+  console.log("Server active");
+  
 })
   .get("/properties", async (req, res) => {
     const data = await Listing.find();    
