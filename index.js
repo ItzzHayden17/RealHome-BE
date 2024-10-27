@@ -8,6 +8,7 @@ import fs from "fs";
 import bcrypt from "bcrypt";
 import dotenv from "dotenv";
 import sgMail from '@sendgrid/mail';
+import axios from "axios";
 
 const app = express();
 const port = 8080; //This will change when we host it online
@@ -189,6 +190,13 @@ const storage = multer.diskStorage({
 
 
 
+
+function keepServerAlive(){
+  axios.get("https://realhome-be.onrender.com").then(()=>{
+    console.log("Req made");
+    
+  })
+}
 //Here is the wishlist checking funtion
 
 function checkForMatches(listing,wishlist){
@@ -224,6 +232,7 @@ function sendEmail(userEmail,listing){
 
 
 async function checkAndNotify() {
+  keepServerAlive()
   const wishlists = await Wishlist.find();
   const listings = await Listing.find();
 
