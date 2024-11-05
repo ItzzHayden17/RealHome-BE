@@ -191,12 +191,7 @@ const storage = multer.diskStorage({
 
 
 
-function keepServerAlive(){
-  axios.get("https://realhome-be.onrender.com").then(()=>{
-    console.log("Req made");
-    
-  })
-}
+
 //Here is the wishlist checking funtion
 
 function checkForMatches(listing,wishlist){
