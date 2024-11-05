@@ -227,7 +227,6 @@ function sendEmail(userEmail,listing){
 
 
 async function checkAndNotify() {
-  keepServerAlive()
   const wishlists = await Wishlist.find();
   const listings = await Listing.find();
 
