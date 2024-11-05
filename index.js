@@ -18,7 +18,7 @@ const saltRounds = 10;
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 app.use(bodyParser.urlencoded({ extended: true })); //Allow express to use body-parser to parse incoming form data.
-app.use("/image", express.static("uploads"));
+app.use("/image", express.static("/data/uploads"));
 
 const allowedOrigins = [
   "http://localhost:3000",
